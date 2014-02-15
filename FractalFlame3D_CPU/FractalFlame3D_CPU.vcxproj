@@ -145,6 +145,8 @@
       <Cpp0xSupport>true</Cpp0xSupport>
       <VectorizerDiagnosticLevel>LoopsSuccessVectorized1</VectorizerDiagnosticLevel>
       <FloatingPointModel>Fast2</FloatingPointModel>
+      <RecognizeRestrictKeyword>true</RecognizeRestrictKeyword>
+      <EnableAnsiAliasing>true</EnableAnsiAliasing>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -60,7 +60,13 @@ public:
 		return (c + this->color) * 0.5f;
 	}
 };
+inline Vector3 v1(const Vector3 &p) {
+	float x = sin(p[0]);
+	float y = sin(p[1]);
+	float z = sin(p[2]);
 
+	return Vector3(x, y, z);
+}
 inline Vector3 v3z(const Vector3 &p) {
 	float rsq = p.squaredLength();
 	float x = p[0] * sin(rsq) - p[1] * cos(rsq);
@@ -70,16 +76,19 @@ inline Vector3 v3z(const Vector3 &p) {
 	return Vector3(x, y, z);
 }
 
-#define n_affs 5
+#define n_affs 3
 #define n_frames 128
+#define n_threads 12
 #define max(a,b) (a > b ? a : b)
 #define min(a,b) (a < b ? a : b)
 
 #include <omp.h>
 
 int main(int argc, char **argv){
-	omp_set_num_threads(5);
-	srand(time(NULL));
+	omp_set_num_threads(n_threads);
+	//const u64 seed = time(NULL);
+	const u64 seed = 0x52fee234;
+	srand(seed);
 	// generate affine transforms
 	affinetransform affs[n_affs];
 
@@ -89,15 +98,18 @@ int main(int argc, char **argv){
 		hbufs[i] = HistoBuffer(wid, hei);
 	}
 
+	uint64_t bytes_plotted = 0;
+
 	int frame_count = 0;
 	while (1) {
 		++frame_count;
 #pragma omp parallel for schedule(dynamic)
-		for (int j = 0; j < 60; j++){
+		for (int j = 0; j < n_threads * 5; j++){
 			Vector3 p(0, 0, 0);
 			Vector3 c(0, 0, 0);
-			for (int i = -20; i < 100000 * min(frame_count, 10); i++){
-				// plot 1,000,000 points
+			for (int i = -20; i < 100000 * min(frame_count, 100); i++){
+#pragma omp critical
+				bytes_plotted += 6 * sizeof(float);
 				unsigned int rand_idx;
 				rdrand_u32(&rand_idx);
 				// apply random affine
@@ -109,11 +121,12 @@ int main(int argc, char **argv){
 				if (i >= 0){ // ignore the first 20 iterations
 					float p_theta = atan2(p[2], p[0]);
 					float p_rad = sqrt(p[2] * p[2] + p[0] * p[0]);
-					float py = p[1] * hei / 4.0f * aspect + hei / 2.0f;
+					float py = p[1] * (hei / 4.0f) * aspect + (hei / 2.0f);
 
 					int y = (int)py;
 					if (y >= 0 && y < hei){
-						float new_x[n_frames];
+						__declspec(align(64)) float new_x[n_frames];
+						#pragma vector aligned
 						for (int frame = 0; frame < n_frames; frame++){
 							float f_theta = map(frame, 0, n_frames, 0, 2 * PI);
 
@@ -121,12 +134,12 @@ int main(int argc, char **argv){
 							new_x[frame] = cos(new_theta) * p_rad * (wid / 4.0f) + (wid / 2.0f);
 						}
 
+
+
 						for (int frame = 0; frame < n_frames; frame++){
-							float px = new_x[frame];
+							int x = (int)new_x[frame];
 
-							int x = (int)px;
-
-							if (x >= 0 && x < wid && y >= 0 && y < hei){
+							if (x >= 0 && x < wid){
 								hbufs[frame].at(x, y).r += c[0];
 								hbufs[frame].at(x, y).g += c[1];
 								hbufs[frame].at(x, y).b += c[2];
@@ -137,9 +150,9 @@ int main(int argc, char **argv){
 				}
 			}
 		}
-		cout << "done genning" << endl;
+		cout << "done genning " << (bytes_plotted/1000000000.f) << " GB plotted" << endl;
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
 		for (int frame = 0; frame < n_frames; frame++){
 			float max_a = 1;
 			for (int y = 0; y < hei; y++){
@@ -176,7 +189,7 @@ int main(int argc, char **argv){
 				}
 			}
 			char filename[80];
-			sprintf(filename, "frame_%04d.ppm", frame);
+			sprintf(filename, "frame_%04d_%x.ppm", frame, seed);
 			simplePPM_write_ppm(filename, wid, hei, &buf.at(0, 0)[0]);
 			buf.dealloc();
 		}

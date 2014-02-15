@@ -2,7 +2,7 @@
 #define __BUFFER
 
 #include "GenVector.h"
-
+#include <malloc.h>
 class ColBuffer
 {
 public:
@@ -27,14 +27,14 @@ public:
 
 	void dealloc(){
 		if (data != NULL)
-			free(data);
+			_aligned_free(data);
 		data = NULL;
 	}
 
 private:
 	const unsigned int w;
 	const unsigned int h;
-	Color * data;
+	__declspec(align(64)) Color __declspec(align(64)) * data;
 
 	void alloc()
 	{
@@ -44,13 +44,14 @@ private:
 			return;
 		}
 
-		data = (Color*) calloc(this->w * this->h, sizeof(Color));
+		data = (Color*) _aligned_malloc(size * sizeof(Color), 64);
+		memset(data, 0, this->w * this->h * sizeof(Color));
 	}
 };
 
 typedef struct {
 	float r, g, b;
-	uint64_t a;
+	float a;
 } histogram;
 
 class HistoBuffer
@@ -76,14 +77,14 @@ public:
 	}
 	void dealloc(){
 		if (data != NULL)
-			free(data);
+			_aligned_free(data);
 		data = NULL;
 	}
 
 private:
 	const unsigned int w;
 	const unsigned int h;
-	histogram * data;
+	__declspec(align(64)) histogram __declspec(align(64)) * data;
 
 	void alloc()
 	{
@@ -93,7 +94,8 @@ private:
 			return;
 		}
 
-		data = (histogram*)calloc(this->w * this->h, sizeof(histogram));
+		data = (histogram*)_aligned_malloc(size * sizeof(histogram), 64);
+		memset(data, 0, this->w * this->h * sizeof(histogram));
 	}
 };
 #endif
