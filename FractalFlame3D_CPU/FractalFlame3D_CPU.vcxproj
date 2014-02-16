@@ -147,6 +147,7 @@
       <FloatingPointModel>Fast2</FloatingPointModel>
       <RecognizeRestrictKeyword>true</RecognizeRestrictKeyword>
       <EnableAnsiAliasing>true</EnableAnsiAliasing>
+      <AdditionalIncludeDirectories>C:\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,12 +157,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AffineTransform.h" />
     <ClInclude Include="buffer.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="datatypes.h" />
     <ClInclude Include="GenVector.h" />
     <ClInclude Include="rdrand.h" />
     <ClInclude Include="simplePPM.h" />
+    <ClInclude Include="Variations.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

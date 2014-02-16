@@ -33,6 +33,12 @@
     <ClInclude Include="GenVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Variations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AffineTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="simplePPM.cpp">

@@ -1,4 +1,4 @@
-#define wid (1920 * 1)
-#define hei (1080 * 1)
+#define wid (800)
+#define hei (600)
 
 #define aspect ((float) wid / (float) hei)
